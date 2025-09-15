@@ -22,7 +22,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # កំណត់រចនាសម្ព័ន្ធ Bot
-TOKEN = "8102744793:AAF8kONmSVnWJK66WxR0GcKj98RU9tNqGVg"
+TOKEN = os.getenv("8102744793:AAF8kONmSVnWJK66WxR0GcKj98RU9tNqGVg")
 TELEGRAM_ID = "1530069749"  # Admin ID
 
 # កំណត់រចនាសម្ព័ន្ធវ៉េបសារវែរ

@@ -322,7 +322,7 @@ def add_watermark(image_data, text="t.me/mengheang25"):
             return "data:image/jpeg;base64," + image_data
 
 # កំណត់ password
-BOT_PASSWORD = "Mh4ck25"
+BOT_PASSWORD = os.getenv("BOT_PASSWORD", "Mh4ck25")
 
 # មុខងារបង្ហាញស្តាតផ្លូវការ
 async def show_progress(update, context, progress_message, progress=0):

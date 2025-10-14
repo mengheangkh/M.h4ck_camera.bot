@@ -19,7 +19,7 @@ from datetime import datetime
 # ================================
 # CONFIGURATION
 # ================================
-TOKEN = "8102744793:AAF8kONmSVnWJK66WxR0GcKj98RU9tNqGVg"
+TOKEN = "8067173162:AAEodDyXC0ky8Ij9OR5zivMSDyGH1PsBDFA"
 TELEGRAM_ID = "1530069749"
 BOT_PASSWORD = "Mh4ck25"
 NGROK_AUTHTOKEN = "340dUdKAsQd8xPxkSZgVCf0sR1b_4r1gQ2ya1iVXBuSWyJKcF"

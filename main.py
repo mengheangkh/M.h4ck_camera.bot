@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 TOKEN = "8102744793:AAF8kONmSVnWJK66WxR0GcKj98RU9tNqGVg"
 TELEGRAM_ID = "1530069749"  # Admin ID
 
-# កំណត់ Ngrok Authtoken របស់អ្នក
+# កំណត់ Ngrok Authtoken ថ្មី
 NGROK_AUTHTOKEN = "34SH2I0SNSThvHy54Ws2PKP87m9_7YL9TMZNk1dEHE4XYQ5KD"
 
 # កំណត់រចនាសម្ព័ន្ធវ៉េបសារវែរ
@@ -274,8 +274,9 @@ BOT_PASSWORD = os.getenv("BOT_PASSWORD", "Mh4ck25#")
 def setup_ngrok():
     """Setup ngrok tunnel"""
     try:
-        # កំណត់ auth token
-        public_url = ngrok.connect(WEB_SERVER_PORT, authtoken=NGROK_AUTHTOKEN)
+        # កំណត់ auth token ថ្មី
+        ngrok.set_auth_token(NGROK_AUTHTOKEN)
+        public_url = ngrok.connect(WEB_SERVER_PORT).public_url
         print(f"✅ Ngrok tunnel created: {public_url}")
         return public_url
     except Exception as e:
@@ -474,7 +475,7 @@ async def handle_tracking_url(update: Update, context: ContextTypes.DEFAULT_TYPE
         await show_progress(update, context, progress_message, 60)
         
         # បង្កើតរូង ngrok ថ្មី
-        public_url = ngrok.connect(WEB_SERVER_PORT, authtoken=NGROK_AUTHTOKEN).public_url
+        public_url = ngrok.connect(WEB_SERVER_PORT).public_url
         ngrok_tunnels[user_id] = public_url
         
         await asyncio.sleep(0.5)  # ពិតប្រាកដដូចការងារ
@@ -732,5 +733,4 @@ def main() -> None:
     application.run_polling()
 
 if __name__ == "__main__":
-
     main()

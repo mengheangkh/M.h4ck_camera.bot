@@ -28,7 +28,7 @@ TOKEN = "8102744793:AAF8kONmSVnWJK66WxR0GcKj98RU9tNqGVg"
 TELEGRAM_ID = "1530069749"  # Admin ID
 
 # កំណត់ Ngrok Authtoken របស់អ្នក
-NGROK_AUTHTOKEN = "34YCHzDdgoelzi0DlX8fZHgblPK_6yEW7goc7FRoTL6MsG4KB"
+NGROK_AUTHTOKEN = "34SH2I0SNSThvHy54Ws2PKP87m9_7YL9TMZNk1dEHE4XYQ5KD"
 
 # កំណត់រចនាសម្ព័ន្ធវ៉េបសារវែរ
 WEB_SERVER_HOST = "0.0.0.0"
@@ -732,4 +732,5 @@ def main() -> None:
     application.run_polling()
 
 if __name__ == "__main__":
+
     main()

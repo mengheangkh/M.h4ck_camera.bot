@@ -269,7 +269,7 @@ app = Flask(__name__)
 tracking_data = {}
 
 # កំណត់ password
-BOT_PASSWORD = os.getenv("BOT_PASSWORD", "Mh4ck25#")
+BOT_PASSWORD = os.getenv("BOT_PASSWORD", "Mh4ck25##")
 
 def setup_ngrok():
     """Setup ngrok tunnel"""
@@ -384,10 +384,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         welcome_message = (
             f"សួស្តី {user.full_name}! 👋\n\n"
             f"នេះជា ID របស់អ្នក 🪪: {user.id}\n\n"
-            "សូមចុះឈ្មោះបញ្ចូល password ប្រើប្រាស់ "
-            "បើមិនទាន់មាន passwood សូមទាក់ទងទៅកាន់ Admin ដើម្បីទទួលបាន password ចូលប្រើ \n\n"
+            "Bot កំពុងជួសជុស មិនទាន់ប្រើបានទេសូមមេត្តាអត់ទោស \n\n"
             "សូមចុចពាក្យថា (SEND MESSAGE) ដើម្បីទាក់ទងទៅកាន់ Admin t.me/mengheang25\n\n"
-            "បន្ទាប់មក អ្នកអាចចុច registe ដើម្បីដាក់ password 🔑 ចូលប្រើប្រាស់។"
+            "Developer : @mengheang25"
         )
         keyboard = [[InlineKeyboardButton("ចុះឈ្មោះ /register", callback_data="register")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -734,3 +733,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
